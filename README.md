@@ -16,7 +16,7 @@ https://hackage.haskell.org/package/babylon
 Dadurch kann das Spiel komplett haskellintern umgesetzt werden und wir lernen direkt am praktischen Beispiel, wie man ein interaktives Interface umsetzt.  
 
 Entwicklungsplan:  
-21.6. Absegnung des Projektes  
+21.6. Absegnung des Projektes ✓  
 30.6. Gestaltung eines Interfaces mit wx  
 8.7.  Algorithmus zur Kontrolle eines gültigen Weges  
       dafür bereits Umsetzung von Blockade  
