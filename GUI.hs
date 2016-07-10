@@ -10,9 +10,11 @@ picsize = 100
 
 gui :: IO ()
 gui = 
-   do     
+   do
+     vs <- varCreate 0   
      level <- createLevel 0
      vlevel <- varCreate level
+     
      
      f <- frame   [ resizeable := False ]
       
@@ -24,10 +26,14 @@ gui =
      new  <- menuItem game  [ text := "&New\tCtrl+N" 
                             , help := "New game"
                             ]  
+
+     
      menuLine game 
      quit <- menuQuit game [help := "Quit the game"] 
 
-     set new   [on command := do newlevel <- createLevel 0
+     set new   [on command := do 
+                                 newlevel <- createLevel 0
+                                 varSet vs 0
                                  varSet vlevel newlevel 
                                  set f [ layout      := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
                                  repaint f             
@@ -40,61 +46,52 @@ gui =
            , bgcolor     := white 
            , layout      := space (fst (sizel level)*picsize) (snd (sizel level)*picsize) {- Variabel? -}           
            , on paint    := draw vlevel
-           , on click    := clicki f vlevel
+           , on click    := clicki f vlevel vs
            ] 
 
      WXCore.windowSetFocus f
 
-clicki :: Frame () -> Var Level -> Point -> IO()
-clicki f vlevel (Point b h) = do level <- varGet vlevel
-                                 varSet vlevel (input level (ceiling ((fromIntegral b)/(fromIntegral picsize)), ceiling ((fromIntegral h)/(fromIntegral picsize))))
-                                 repaint f
+clicki :: Frame () -> Var Level -> Var Int -> Point -> IO()
+clicki f vlevel vs (Point b h) = do level <- varGet vlevel
+                                    varSet vlevel (input level (ceiling ((fromIntegral b)/(fromIntegral picsize)), ceiling ((fromIntegral h)/(fromIntegral picsize))))
+                                    level2 <- varGet vlevel
+                                    repaint f
+                                    if finito level2 then do s <- varGet vs
+                                                             varSet vs $ s+1
+                                                             newlevel <- createLevel $ s+1
+                                                             varSet vlevel $ newlevel
+                                                             set f [ layout      := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
+                                                             repaint f
+                                                     else return()
+                                 
+                                 
     
 draw :: Var Level -> DC a -> b -> IO ()
 draw vlevel dc _view =
    do
      level <- varGet vlevel 
+     {-
+     putStrLn $ show $ pathl level
+     putStrLn $ show $ timel level
+     -}
+     
+     
      mapM (drawPosition dc level) [ (x,y) | x <- [1 .. fst (sizel level)], y <- [1 .. snd (sizel level)]]
-     return ()
+     return () 
 
 drawPosition :: DC a -> Level -> Pt -> IO ()
-drawPosition dc level (x,y) = do drawBitmap dc (elemToPick $ initl level (x,y)) (Point ((x-1)*picsize) ((y-1)*picsize)) True []
+drawPosition dc level pt = do drawPick dc pt (initl level pt)
+                              if elem Head (statusl level (timel level) pt)
+                                 then drawPick dc pt Head
+                                 else return ()
+                              if elem Tail (statusl level (timel level) pt)
+                                 then drawPick dc pt Tail
+                                 else return ()
+                              
 
-elemToPick :: Element -> Bitmap ()
-elemToPick Oob = error "ooB"
-elemToPick el = bitmap (show el ++ ".bmp")
+drawPick :: Drawable p => DC a -> Pt -> p -> IO () 
+drawPick  dc (x,y) p = drawBitmap dc (elemToPick p) (Point ((x-1)*picsize) ((y-1)*picsize)) True []                                   
+  where                                  
+   elemToPick ::Drawable a => a -> Bitmap ()
+   elemToPick x = bitmap (drawable x ++ ".png")
            
-           
-
-iwas    :: Bitmap ()
-iwas    = bitmap "test.bmp"
-
-{-     
-tes = do f <- frame [ text := "Layout" ]
-         griddd <- griddi f 3 5
-         set f [ layout :=  grid 25 25 griddd, outersizel := sz 500 500]
-         gridddg <- griddi f 7 7
-         set f [ layout :=  grid 25 25 gridddg, outersizel := sz 500 500]
-         
-griddi :: Frame () -> Int -> Int -> IO ([[Layout]])         
-griddi f 0 _ = return []
-griddi f a 0 = return [[] | c<-[0 .. a]]
-griddi f 1 b = do zwischen <- griddi f 1 (b-1)
-                  xs <- return (head (zwischen))
-                  x <- createPanel f b
-                  return ([(x:xs)])
-griddi f a b = do xs <- griddi f (a-1) b
-                  zwischen <- griddi f 1 b
-                  x <- return (head (zwischen))
-                  return (x:xs)
-
-createPanel :: Frame () -> Int -> IO (Layout)                  
-createPanel f a = do p <- panel f []
-                     image <- bitmapCreateFromFile "NotBlack.png"
-                     image2 <- bitmapCreateFromFile "Brown.png"
-                     imagep <- if a==1
-                                 then panel p [ on paint := onPaint image]
-                                 else panel p [ on paint := onPaint image2]
-                     return (fill $ container p $ fill $ widget imagep)
-  where
-    onPaint image dc rect = drawBitmap dc image pointZero True []-}
