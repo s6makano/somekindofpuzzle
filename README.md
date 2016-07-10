@@ -17,7 +17,7 @@ Dadurch kann das Spiel komplett haskellintern umgesetzt werden und wir lernen di
 
 Entwicklungsplan:  
 21.6. Absegnung des Projektes ✓  
-30.6. Gestaltung eines Interfaces mit wx  
+30.6. Gestaltung eines Interfaces mit wx ✓  
 8.7.  Algorithmus zur Kontrolle eines gültigen Weges  
       dafür bereits Umsetzung von Blockade  
 13.7. Algorithmus zu Erstellung einer Spielinstanz  
