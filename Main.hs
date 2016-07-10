@@ -11,5 +11,3 @@ import GUI
 
 main :: IO ()
 main = start gui
-
-{- Dieser Kommentar kann gelöscht werden -}
