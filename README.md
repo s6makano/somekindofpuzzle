@@ -26,3 +26,4 @@ bis zu Projektabgabe: Tuning an Schwierigkeit und Erstellung weiterer Elemente
 
 Versionhistory:  
 0.1 – Wall  
+0.2 - Wall, Timemachine  
