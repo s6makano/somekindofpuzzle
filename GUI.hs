@@ -71,15 +71,17 @@ draw vlevel dc _view =
    do level <- varGet vlevel 
       putStrLn "Wie sieht es aus?"     
       mapM (drawPosition dc level) [ (x,y) | x <- [1 .. fst (sizel level)], y <- [1 .. snd (sizel level)]]
-      putStrLn "Klappt das?"     
+      putStrLn "Klappt das?"
+      putStrLn $ show $ ((1,1) `hasntCondition` (isBlocking)) level
+   
       return () 
 
 drawPosition :: DC a -> Level -> Pt -> IO ()
 drawPosition dc level pt = do drawPick dc pt (initl level pt)
-                              if elem Head (statusl level (timel level) pt)
-                                 then drawPick dc pt Head
+                              if (pt `hasCondition` isHead) level
+                                 then drawPick dc pt "Head"
                                  else return ()
-                              if elem Tail (statusl level (timel level) pt)
+                              if (pt `hasCondition` ( (==) Tail)) level
                                  then drawPick dc pt Tail
                                  else return ()
                               

@@ -22,17 +22,27 @@ instance Drawable Element where
   drawable Oob = error "Oob cannot be drawn"
   drawable el = show el
 
-data State = Head | Tail | Blocked | InTimeMachine deriving (Eq, Show)
+data State = Conscious | OwnPast | Soon State | Tail | Blocked | InTimeMachine deriving (Eq, Show)
 
 instance Drawable State where
-  drawable st = show st
+  drawable = show
 
+{- Richtig hässlicher Workaround, um Strings (und nichts anderes) Drawable zu machen. -}
+class IsChar a where
+  toChar :: a -> Char
+instance IsChar Char where
+  toChar = id
+instance IsChar a => Drawable [a] where
+  drawable = fmap toChar
+  
 finito :: Level -> Bool
 finito level = initl level (head (pathl level)) == End
+
+
   
 input :: Level -> Pt -> Level
-input level newhead | if null $ pathl level then True else elem newhead $ findNeighbors level (head (pathl level))
-                        = let newtime= timel level + 1 in
+input level newhead | if null $ pathl level then True else elem newhead (findNeighbors level (head (pathl level))) && all (\pt -> (( pt `hasntCondition` isBlockingOwnPast) level)) (futureheads level)
+                        = let newtime = timel level + 1 in
                           Level { sizel = sizel level,
                                   timel = newtime,
                                   initl = initl level,
@@ -40,9 +50,9 @@ input level newhead | if null $ pathl level then True else elem newhead $ findNe
                                     (\t -> if t == newtime
                                              then updateState level newhead
                                              else (statusl level t)),
-                                  pathl = newhead:pathl level
+                                  pathl = newhead:(pathl level)
                                 }
-                    | ifSnake level newhead 
+                    | (newhead `hasCondition` isSnake) level 
                         = let newt = findSnake level newhead in
                           Level { sizel = sizel level,
                                   timel = newt,
@@ -56,22 +66,73 @@ input level newhead | if null $ pathl level then True else elem newhead $ findNe
         findSnake level pt = case elemIndex pt (pathl level) of
                                   Nothing -> error "snake is broken"
                                   Just x -> timel level - x
-ifSnake :: Level -> Pt -> Bool
-ifSnake level pt = any (\i -> (i==Tail)|| (i==Head)) (statusl level (timel level) pt)
+        
+        futureheads :: Level -> [Pt]
+        futureheads level = filter (\pt -> (pt `hasCondition` ((==) $ Soon OwnPast)) level) $ listofPts level
+        
+        isBlockingOwnPast :: State -> Bool
+        isBlockingOwnPast (Soon OwnPast) = False
+        isBlockingOwnPast a = isBlocking a
 
+statusNow :: Level -> (Pt -> [State])
+statusNow level = statusl level $ timel level
+
+infixl 4 `hasCondition`                                  
+hasCondition :: Pt -> (State -> Bool) -> Level -> Bool
+(pt `hasCondition` cond) level = any cond $ statusNow level pt     
+
+infixl 4 `hasntCondition`                                  
+hasntCondition :: Pt -> (State -> Bool) -> Level -> Bool
+(pt `hasntCondition` cond) level = all (not.cond) $ statusNow level pt                                
+                                  
+                                  
+isSnake :: State -> Bool
+isSnake a = any (\f -> f a) [isHead, (==) Tail] {- Meh. -}
+
+isHead :: State -> Bool
+isHead a = any (\f -> f a) [(==) Conscious, (==) OwnPast] {- Meh. -}
+
+isBlocking :: State -> Bool
+isBlocking (Soon a) = isBlockingRightNow a
+isBlocking a = isBlockingRightNow a
+
+
+isBlockingRightNow :: State -> Bool {- Eigentlich Unterfunktion von isBlocking. Wie geht das? -}
+isBlockingRightNow a = any (\f -> f a) [isSnake, (==) Blocked] {- Meh. -}
 
 updateState :: Level -> Pt -> Pt -> [State]                                    
-
 updateState level newhead pt | elem (InTimeMachine) $ statusl level (timel level) newhead
                                 = let d = headrepeats $ pathl level in
-                                      statusl level (max 1 ((timel level +1)-(2*d))) pt
-                                      ++ [InTimeMachine | pt == newhead]
+                                      if 1 < ((timel level +1)-(2*d))
+                                         then fmap schleierdesvergessens $ statusl level ((timel level +1)-(2*d)) pt
+                                              ++ [InTimeMachine | pt == newhead]
+                                              ++ (soon =<< statusl level ((timel level)-(2*(d-1))) pt)
+                                              ++ (soonsoon $ statusNow level pt)
+                                      else statusNow level pt
                              | otherwise
-                                = [ Tail | ifSnake level pt ] ++
-                                  [ Head | newhead == pt ] ++
+                                = [ Tail | (pt `hasCondition` isSnake) level ] ++
+                                  [ Conscious | newhead == pt ] ++
+                                  [ a | a <- deSoon $ statusNow level pt] ++
                                   [ Blocked | initl level pt == Oob || initl level pt == Wall ] ++
                                   [InTimeMachine | pt == newhead && initl level newhead == Timemachine]
-
+  where deSoon :: [State] -> [State]
+        deSoon [] = []
+        deSoon (Soon x:xs) = x:(deSoon xs)
+        deSoon (x:xs) = deSoon xs
+        
+        schleierdesvergessens :: State -> State
+        schleierdesvergessens Conscious = OwnPast
+        schleierdesvergessens s = s
+        
+        soon :: State -> [State]
+        soon s | isHead s = [Soon OwnPast]
+               | otherwise = []
+               
+        soonsoon :: [State] -> [State]
+        soonsoon [] = []
+        soonsoon (Soon x:xs) = Soon (Soon x):deSoon xs
+        soonsoon (x:xs) = deSoon xs
+ 
 headrepeats :: Eq a => [a] -> Int
 headrepeats (x:x':xs) = if x==x' then headrepeats (x':xs)+1 else 1
 headrepeats xs = length xs
@@ -83,12 +144,11 @@ findElement :: Level -> Element -> Maybe Pt
 findElement level element = find ((== element).(initl level)) (listofPts level)
                                                     
 {-findNeighbors  :: go to parship.com -}
-findNeighbors level (x,y) =    filter (isWay level) [(x+1,y), (x-1,y), (x,y+1), (x,y-1)]
+findNeighbors :: Level -> Pt -> [Pt]
+findNeighbors level (x,y) =    filter (\i -> (i `hasntCondition` (isBlocking)) level) [(x+1,y), (x-1,y), (x,y+1), (x,y-1)] {- Meh. -}
                             ++ if elem InTimeMachine $ statusl level (timel level) (x,y)
                                   then [(x,y)]
                                   else []
-  where isWay :: Level -> Pt -> Bool
-        isWay level pt = not $ any (\i -> (i==Blocked)|| (i==Tail)|| (i==Head)) (statusl level (timel level) pt)
 
 dotodolist :: (Monad m, Foldable t) => t (g -> m g) -> m g
 dotodolist = foldl (>>=) (return undefined) {- WTF! Kann mir endlich mal einer erklären, wann undefined geht und wann nicht? gz. JonJon -}
@@ -187,11 +247,6 @@ createLevel s = do zf <- randomRIO (0,1)
         proposeElements :: Int -> [Element]
         proposeElements s = [ Wall | i <- [0 .. (s + 1)] ]
   
-        initstatusl :: (Pt -> Element) -> (Int -> Pt -> [State])
-        initstatusl f _ pt | f pt == Start = [Head]
-                           | f pt == Oob = [Blocked]
-                           | otherwise = []
- 
         randomElement :: [a] -> Maybe (IO a)
         randomElement [] = Nothing
         randomElement xs = return $ do n <- randomRIO (0,length xs - 1)
@@ -209,4 +264,6 @@ createLevel s = do zf <- randomRIO (0,1)
           where
             n = length xs
             newArray :: Int -> [a] -> IO (IOArray Int a)
-            newArray n xs =  newListArray (1,n) xs 
+            newArray n xs =  newListArray (1,n) xs
+
+            
