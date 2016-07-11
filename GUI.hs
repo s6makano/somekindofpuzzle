@@ -68,16 +68,11 @@ clicki f vlevel vs (Point b h) = do level <- varGet vlevel
     
 draw :: Var Level -> DC a -> b -> IO ()
 draw vlevel dc _view =
-   do
-     level <- varGet vlevel 
-     {-
-     putStrLn $ show $ pathl level
-     putStrLn $ show $ timel level
-     -}
-     
-     
-     mapM (drawPosition dc level) [ (x,y) | x <- [1 .. fst (sizel level)], y <- [1 .. snd (sizel level)]]
-     return () 
+   do level <- varGet vlevel 
+      putStrLn "Wie sieht es aus?"     
+      mapM (drawPosition dc level) [ (x,y) | x <- [1 .. fst (sizel level)], y <- [1 .. snd (sizel level)]]
+      putStrLn "Klappt das?"     
+      return () 
 
 drawPosition :: DC a -> Level -> Pt -> IO ()
 drawPosition dc level pt = do drawPick dc pt (initl level pt)
