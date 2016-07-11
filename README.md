@@ -23,3 +23,6 @@ Entwicklungsplan:
 13.7. Algorithmus zu Erstellung einer Spielinstanz  
       dafür weitere Elemente  
 bis zu Projektabgabe: Tuning an Schwierigkeit und Erstellung weiterer Elemente  
+
+Versionhistory:  
+0.1 – Wall  
