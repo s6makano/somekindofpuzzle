@@ -75,59 +75,67 @@ findElement level element = find ((== element).(initl level)) (listofPts level)
 findNeighbors level (x,y) = filter (isWay level) ([(x+1,y), (x-1,y), (x,y+1), (x,y-1)] {- ++ Kram -})
   where isWay :: Level -> Pt -> Bool
         isWay level pt = not $ any (\i -> (i==Blocked)|| (i==Tail)|| (i==Head)) (statusl level (timel level) pt)
-  
+
+dotodolist :: (Monad m, Foldable t) => t (g -> m g) -> m g
+dotodolist = foldl (>>=) (return undefined) {- WTF! Kann mir endlich mal einer erklären, wann undefined geht und wann nicht? gz. JonJon -}
+
+
+
+        
 createLevel :: Int -> IO Level
-createLevel s = do xy <- randomRIO (2,10)
-                   yx <- randomRIO (2,6)
-                   let sizel = (xy,yx)
-                   start <- randomTile (xy-1, yx-1)
-                   tmp <- randomTile (xy, yx)
-                   let ziel = if tmp == start then ((fst start) + 1, (snd start) + 1) else tmp
-                       level1 = Level { sizel = sizel,
-                                        timel = 0,
-                                        initl = (\(x,y) -> case () of _
+
+createLevel s = do todolist <- return [lbui tier s | tier <- [1 .. 3]] {- „Dynamisch“ erstellte Todo-Liste -}
+                   level <- dotodolist todolist
+                   return $ input level { pathl = []} $ head $ pathl level {- Todo: Prelevel-Datentyp -}              
+  where lbui :: Int -> Int -> Level -> IO Level    
+        lbui 1 s _ = do xy <- randomRIO (2,10)
+                        yx <- randomRIO (2,6)
+                        let sizel = (xy,yx)
+                        start <- randomTile (xy-1, yx-1)
+                        tmp <- randomTile (xy, yx)
+                        let ziel = if tmp == start then ((fst start) + 1, (snd start) + 1) else tmp
+                        return Level { sizel = sizel,
+                                       timel = 0,
+                                       initl = (\(x,y) -> case () of _
                                                                         | (x,y) == start -> Start
                                                                         | (x,y) == ziel -> End
                                                                         | otherwise -> if 0 < x && x <= xy && 0 < y && y <= yx then Empty else Oob),
-                                        pathl = undefined,
-                                        statusl = \t -> \pt -> []
+                                       pathl = [start,ziel],
+                                       statusl = \t -> \pt -> []
                                      }
-                       level2 = level1 { pathl = createWay start ziel } {- TODO give it level-}
-                   level3 <- makeLevel s level2 $ proposeElements s
-                   let level4 = level3 { pathl = [] }
-                   return $ input level4 start
-                        
- where
-  makeLevel :: Int -> Level -> [Element] -> IO Level
-  makeLevel s level obst = do shuffled <- shuffle $ (listofPts level) \\ (pathl level)
-                              return level { initl = (\pt -> case elem pt $ take (length obst) $ shuffled of
+        
+        lbui 2 s pre = let start:ziel:[]  = pathl pre in
+                       return pre { pathl = createWay ziel start } {- TODO give it pre -} {- Habe den Weg umgedreht. -}
+        lbui 3 s pre = do shuffled <- shuffle $ (listofPts pre) \\ (pathl pre)
+                          return pre { initl = (\pt -> case elem pt $ take (length $ proposeElements s) shuffled of
                                                                True -> Wall
-                                                               False -> initl level pt)
-                                           }
+                                                               False -> initl pre pt)
+                                     }
+
                                                        
   
-  randomTile :: Pt -> IO Pt
-  randomTile (xy,yx) = do x <- randomRIO (1,xy)
-                          y <- randomRIO (1,yx)
-                          return (x,y)
+        randomTile :: Pt -> IO Pt
+        randomTile (xy,yx) = do x <- randomRIO (1,xy)
+                                y <- randomRIO (1,yx)
+                                return (x,y)
                                           
   
-  createWay :: Pt -> Pt -> [Pt]
-  createWay (sx, sy) (zx, zy) = if sx==zx then case signum (sy-zy) of
-                                                   -1 -> (zx, zy) : createWay (sx, sy) (zx, zy - 1)
-                                                   0 -> [(zx, zy)]
-                                                   1 -> (zx, zy) : createWay (sx, sy) (zx, zy + 1)
-                                  else case signum (sx-zx) of
-                                                   -1 -> (zx, zy) : createWay (sx, sy) (zx - 1, zy)
-                                                   1 -> (zx, zy) : createWay (sx, sy) (zx + 1, zy)
+        createWay :: Pt -> Pt -> [Pt]
+        createWay (sx, sy) (zx, zy) = if sx==zx then case signum (sy-zy) of
+                                                          -1 -> (zx, zy) : createWay (sx, sy) (zx, zy - 1)
+                                                          0 -> [(zx, zy)]
+                                                          1 -> (zx, zy) : createWay (sx, sy) (zx, zy + 1)
+                                                else case signum (sx-zx) of
+                                                          -1 -> (zx, zy) : createWay (sx, sy) (zx - 1, zy)
+                                                          1 -> (zx, zy) : createWay (sx, sy) (zx + 1, zy)
   
-  proposeElements :: Int -> [Element]
-  proposeElements s = [ Wall | i <- [0 .. (s + 1)] ]
+        proposeElements :: Int -> [Element]
+        proposeElements s = [ Wall | i <- [0 .. (s + 1)] ]
   
-  initstatusl :: (Pt -> Element) -> (Int -> Pt -> [State])
-  initstatusl f _ pt | f pt == Start = [Head]
-                     | f pt == Oob = [Blocked]
-                     | otherwise = []
+        initstatusl :: (Pt -> Element) -> (Int -> Pt -> [State])
+        initstatusl f _ pt | f pt == Start = [Head]
+                           | f pt == Oob = [Blocked]
+                           | otherwise = []
  
 
 
