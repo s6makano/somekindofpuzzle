@@ -7,7 +7,7 @@ module Main where
 
 import Graphics.UI.WX hiding (play)
 import Graphics.UI.WXCore
-import GUI
+import GUI2
 
 main :: IO ()
 main = start gui
