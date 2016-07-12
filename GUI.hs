@@ -45,45 +45,69 @@ gui =
      set f [ text        := "DAS STEHT OBEN"
            , bgcolor     := white 
            , layout      := space (fst (sizel level)*picsize) (snd (sizel level)*picsize) {- Variabel? -}           
-           , on paint    := draw vlevel
+           , on paint    := onpaint f vlevel 
+                        
            , on click    := clicki f vlevel vs
            ] 
-
      WXCore.windowSetFocus f
 
+onpaint :: Frame () -> Var Level -> DC a -> b -> IO ()
+onpaint f vlevel dc _view = do set f [on paint := onpaint{-debug-} f vlevel]
+                               putStrLn "Was passiert hier?"
+                               draw vlevel dc _view
+
+onpaintdebug :: Frame () -> Var Level -> DC a -> b -> IO ()
+onpaintdebug f vlevel dc _view = set f [on paint := onpaint f vlevel]
+                               
+
 clicki :: Frame () -> Var Level -> Var Int -> Point -> IO()
-clicki f vlevel vs (Point b h) = do level <- varGet vlevel
+clicki f vlevel vs (Point b h) = do putStrLn "Ich wurde angeklickt."
+                                    level <- varGet vlevel
+                                    putStrLn "Ich beginne, einen neuen Level zu generieren."
                                     varSet vlevel (input level (ceiling ((fromIntegral b)/(fromIntegral picsize)), ceiling ((fromIntegral h)/(fromIntegral picsize))))
                                     level2 <- varGet vlevel
-                                    repaint f
+                                    putStrLn "Der neue Level ist da."
+                                    putStrLn "Jetzt teste ich noch, ob die Siegbedingung erfüllt ist."
                                     if finito level2 then do s <- varGet vs
                                                              varSet vs $ s+1
                                                              newlevel <- createLevel $ s+1
                                                              varSet vlevel $ newlevel
                                                              set f [ layout      := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
-                                                             repaint f
                                                      else return()
+                                    putStrLn "Siegbedingung getestet."
+                                    repaint f
                                  
                                  
     
 draw :: Var Level -> DC a -> b -> IO ()
-draw vlevel dc _view =
-   do level <- varGet vlevel 
-      putStrLn "Wie sieht es aus?"     
-      mapM (drawPosition dc level) [ (x,y) | x <- [1 .. fst (sizel level)], y <- [1 .. snd (sizel level)]]
-      putStrLn "Klappt das?"
-      putStrLn $ show $ ((1,1) `hasntCondition` (isBlocking)) level
-   
-      return () 
+draw vlevel dc _view = do level <- varGet vlevel 
+                          putStrLn "Ich beginne zu zeichnen."     
+                          {- mapM (drawPosition dc level) $ listofPts level -}
+                          draw' level (listofPts level) dc _view
+                          putStrLn "Ich habe fertig gezeichnet."
+                          {- debug level -}
+      
+      
+     
+debug :: Level -> IO ()
+debug level = dotodolist [ \_ -> putStrLn $ show $ statusNow level x | x <- listofPts level ] 
 
-drawPosition :: DC a -> Level -> Pt -> IO ()
-drawPosition dc level pt = do drawPick dc pt (initl level pt)
+draw' :: Level -> [Pt] -> DC a -> b -> IO ()
+draw' level (x:xs) dc _view = do drawPosition level x dc
+                                 draw' level xs dc _view
+draw' _ [] _ _ = return ()
+
+
+
+drawPosition :: Level -> Pt -> DC a -> IO ()
+drawPosition level pt dc = do drawPick dc pt (initl level pt)
                               if (pt `hasCondition` isHead) level
                                  then drawPick dc pt "Head"
                                  else return ()
                               if (pt `hasCondition` ( (==) Tail)) level
                                  then drawPick dc pt Tail
                                  else return ()
+                              putStrLn $ "Koordinate "++show pt++" gezeichnet."
                               
 
 drawPick :: Drawable p => DC a -> Pt -> p -> IO () 

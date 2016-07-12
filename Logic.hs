@@ -167,23 +167,14 @@ createLevel :: Int -> IO Level
 createLevel s = do zf <- randomRIO (0,1)
                    let _ = zf :: Int
                    let tierlist = [1,2,3]++if zf == 1 then [51] else []
-                   todolist <- return [lbui tier s | tier <- tierlist] {- Dynamisch erstellte Todo-Liste -}
-                   putStrLn "Überlebe ich es?"
+                       todolist = [lbui tier s | tier <- tierlist] {- Dynamisch erstellte Todo-Liste -}
                    finalprelevel <- dotodolist todolist
-                   putStrLn "Ja!"
                    let endresult = input Level { sizel = sizep finalprelevel,
                                                  timel = 0,
                                                  initl = initp finalprelevel,
                                                  statusl = \t pt -> [],
                                                  pathl = []
                                         } $ startp finalprelevel    
-                   putStrLn $ show $ sizel endresult
-                   putStrLn $ show $ timel endresult
-                   putStrLn $ show $ statusl endresult 1 (1,1)
-                   putStrLn $ show $ initl endresult (1,1)
-                   putStrLn $ show $ initl endresult (0,2)
-                   putStrLn $ show $ pathl endresult
-                   
                    return endresult
                                         
   where lbui :: Int -> Int -> Prelevel -> IO Prelevel    
