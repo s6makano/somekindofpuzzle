@@ -4,6 +4,7 @@ import System.Random
 import Data.List
 import Data.Array.IO
 import Control.Monad
+import Data.Maybe
 
 type Pt = (Int, Int)
 
@@ -16,13 +17,14 @@ data Level = Level { sizel :: (Int, Int),
                      statusl :: Int -> Pt -> [State],
                      pathl :: [Pt] }
        
-data Element = Start | End | Empty | Oob | Wall | Timemachine deriving (Eq, Bounded, Show)
+data Element = Start | Need Int | End | Empty | Oob | Wall deriving (Eq, Show)
 
 instance Drawable Element where
   drawable Oob = error "Oob cannot be drawn"
+  drawable (Need i) = "Need"++show i
   drawable el = show el
 
-data State = Conscious | OwnPast | Soon State | Tail | Blocked | InTimeMachine deriving (Eq, Show)
+data State =  Head | Tail | Blocked | InTimeMachine deriving (Eq, Show)
 
 instance Drawable State where
   drawable = show
@@ -36,13 +38,16 @@ instance IsChar a => Drawable [a] where
   drawable = fmap toChar
   
 finito :: Level -> Bool
-finito level = initl level (head (pathl level)) == End
+finito level = initl level (head (pathl level)) == End && all (hasNeeds level) (listofPts level)
+
+hasNeeds :: Level -> Pt -> Bool
+hasNeeds level (x,y) = case initl level (x,y) of
+                      Need i -> i == (length $ intersect [(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] (pathl level))
+                      _ -> True
 
 
-  
-input :: Level -> Pt -> Level
-input level newhead | if null $ pathl level then True else elem newhead (findNeighbors level (head (pathl level))) && all (\pt -> (( pt `hasntCondition` isBlockingOwnPast) level)) (futureheads level)
-                        = let newtime = timel level + 1 in
+
+doinput level newhead   = let newtime = timel level + 1 in
                           Level { sizel = sizel level,
                                   timel = newtime,
                                   initl = initl level,
@@ -52,6 +57,14 @@ input level newhead | if null $ pathl level then True else elem newhead (findNei
                                              else (statusl level t)),
                                   pathl = newhead:(pathl level)
                                 }
+
+
+
+
+  
+input :: Level -> Pt -> Level
+input level newhead | elem newhead (findNeighbors level (head (pathl level)))
+                        = doinput level newhead
                     | (newhead `hasCondition` isSnake) level 
                         = let newt = findSnake level newhead in
                           Level { sizel = sizel level,
@@ -61,18 +74,13 @@ input level newhead | if null $ pathl level then True else elem newhead (findNei
                                   pathl = drop (timel level - newt) $ pathl level
                                 }
                     | otherwise = level
-
   where findSnake :: Level -> Pt -> Int
         findSnake level pt = case elemIndex pt (pathl level) of
                                   Nothing -> error "snake is broken"
                                   Just x -> timel level - x
         
-        futureheads :: Level -> [Pt]
-        futureheads level = filter (\pt -> (pt `hasCondition` ((==) $ Soon OwnPast)) level) $ listofPts level
-        
-        isBlockingOwnPast :: State -> Bool
-        isBlockingOwnPast (Soon OwnPast) = False
-        isBlockingOwnPast a = isBlocking a
+
+
 
 statusNow :: Level -> (Pt -> [State])
 statusNow level = statusl level $ timel level
@@ -87,56 +95,26 @@ hasntCondition :: Pt -> (State -> Bool) -> Level -> Bool
                                   
                                   
 isSnake :: State -> Bool
-isSnake a = any (\f -> f a) [isHead, (==) Tail] {- Meh. -}
-
-isHead :: State -> Bool
-isHead a = any (\f -> f a) [(==) Conscious, (==) OwnPast] {- Meh. -}
+isSnake Head = True
+isSnake Tail = True
+isSnake _ = False
 
 isBlocking :: State -> Bool
-isBlocking (Soon a) = isBlockingRightNow a
-isBlocking a = isBlockingRightNow a
-
-
-isBlockingRightNow :: State -> Bool {- Eigentlich Unterfunktion von isBlocking. Wie geht das? -}
-isBlockingRightNow a = any (\f -> f a) [isSnake, (==) Blocked] {- Meh. -}
+isBlocking Tail = True
+isBlocking Head = True
+isBlocking Blocked = True
+isBlocking _ = False
 
 updateState :: Level -> Pt -> Pt -> [State]                                    
-updateState level newhead pt | elem (InTimeMachine) $ statusl level (timel level) newhead
-                                = let d = headrepeats $ pathl level in
-                                      if 1 < ((timel level +1)-(2*d))
-                                         then fmap schleierdesvergessens $ statusl level ((timel level +1)-(2*d)) pt
-                                              ++ [InTimeMachine | pt == newhead]
-                                              ++ (soon =<< statusl level ((timel level)-(2*(d-1))) pt)
-                                              ++ (soonsoon $ statusNow level pt)
-                                      else statusNow level pt
-                             | otherwise
-                                = [ Tail | (pt `hasCondition` isSnake) level ] ++
-                                  [ Conscious | newhead == pt ] ++
-                                  [ a | a <- deSoon $ statusNow level pt] ++
-                                  [ Blocked | initl level pt == Oob || initl level pt == Wall ] ++
-                                  [InTimeMachine | pt == newhead && initl level newhead == Timemachine]
-  where deSoon :: [State] -> [State]
-        deSoon [] = []
-        deSoon (Soon x:xs) = x:(deSoon xs)
-        deSoon (x:xs) = deSoon xs
-        
-        schleierdesvergessens :: State -> State
-        schleierdesvergessens Conscious = OwnPast
-        schleierdesvergessens s = s
-        
-        soon :: State -> [State]
-        soon s | isHead s = [Soon OwnPast]
-               | otherwise = []
-               
-        soonsoon :: [State] -> [State]
-        soonsoon [] = []
-        soonsoon (Soon x:xs) = Soon (Soon x):deSoon xs
-        soonsoon (x:xs) = deSoon xs
- 
+updateState level newhead pt    = [ Tail | (pt `hasCondition` isSnake) level ] ++
+                                  [ Head | newhead == pt ] ++
+                                  [ Blocked | initl level pt == Oob || initl level pt == Wall ]
+{- 
 headrepeats :: Eq a => [a] -> Int
 headrepeats (x:x':xs) = if x==x' then headrepeats (x':xs)+1 else 1
 headrepeats xs = length xs
-                                  
+  -}
+  
 listofPts :: Level ->[Pt]
 listofPts Level {sizel = (xy,yx) } = [(x,y) | x <- [1 .. xy],y <- [1 .. yx]]                                   
                                      
@@ -146,9 +124,7 @@ findElement level element = find ((== element).(initl level)) (listofPts level)
 {-findNeighbors  :: go to parship.com -}
 findNeighbors :: Level -> Pt -> [Pt]
 findNeighbors level (x,y) =    filter (\i -> (i `hasntCondition` (isBlocking)) level) [(x+1,y), (x-1,y), (x,y+1), (x,y-1)] {- Meh. -}
-                            ++ if elem InTimeMachine $ statusl level (timel level) (x,y)
-                                  then [(x,y)]
-                                  else []
+                            {- ++ etc -}
 
 dotodolist :: (Monad m, Foldable t) => t (g -> m g) -> m g
 dotodolist = foldl (>>=) (return undefined) {- WTF! Kann mir endlich mal einer erklären, wann undefined geht und wann nicht? gz. JonJon -}
@@ -166,10 +142,10 @@ data Prelevel = Prelevel { sizep :: (Int, Int),
 createLevel :: Int -> IO Level
 createLevel s = do zf <- randomRIO (0,1)
                    let _ = zf :: Int
-                   let tierlist = [1,2,3]++if zf == 1 then [51] else []
+                   let tierlist = [1,2,3,4]
                        todolist = [lbui tier s | tier <- tierlist] {- Dynamisch erstellte Todo-Liste -}
                    finalprelevel <- dotodolist todolist
-                   let endresult = input Level { sizel = sizep finalprelevel,
+                   let endresult = doinput Level { sizel = sizep finalprelevel,
                                                  timel = 0,
                                                  initl = initp finalprelevel,
                                                  statusl = \t pt -> [],
@@ -188,31 +164,34 @@ createLevel s = do zf <- randomRIO (0,1)
                                                                           | 0 < x && x <= xy && 0 < y && y <= yx -> Empty
                                                                           | otherwise -> Oob
                                                   ),
-                                          guaranteedpathp = undefined,
+                                          guaranteedpathp = [startp],
                                           freep = freep,
                                           startp = startp
                                         }
         
         lbui 2 s pre = do end <- randomFreeTile pre
-                          return pre { guaranteedpathp = createWay (startp pre) end,
-                                       freep = delete end $ freep pre,
-                                       initp = \pt -> case () of
-                                                        _ | pt==end -> End
-                                                          | otherwise -> initp pre pt         
-                                     }
+                          prepre <- createWay pre
+                          return prepre {freep = delete (head $ guaranteedpathp prepre) $ freep pre,
+                                         initp = \pt -> case () of
+                                                                    _ | pt == (head $ guaranteedpathp prepre) -> End
+                                                                      | otherwise -> initp pre pt         
+                                        }
         lbui 3 s pre = do shuffled <- shuffle $ freep pre \\ guaranteedpathp pre
-                          return pre { initp = (\pt -> case elem pt $ take (length $ proposeElements s) $ shuffled of
+                          let (xy,yx) = sizep pre
+                          return pre { initp = (\pt -> case elem pt $ take (quot (xy*yx-(length $ guaranteedpathp pre)) 2) shuffled of
                                                                True -> Wall
                                                                False -> initp pre pt)
                                      }
-                                     
-        lbui 51 s pre = do timemachine <- randomFreeTile pre
-                           return pre { freep = delete timemachine $ freep pre,
-                                        initp = \pt -> case () of
-                                                        _ | pt==timemachine -> Timemachine
-                                                          | otherwise -> initp pre pt                                     
-                                      }
+        lbui 4 s pre = do shuffled <- shuffle $ freep pre
+                          let (xy,yx) = sizep pre
+                          return pre { initp = (\pt -> case elem pt $ take (quot (length shuffled) 3) shuffled of
+                                                               True -> Need $ getNeeds (guaranteedpathp pre) pt
+                                                               False -> initp pre pt)
+                                     }                                     
                                                                            
+        getNeeds :: [Pt] -> Pt -> Int
+        getNeeds path (x,y) = length $ intersect [(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] path
+  
   
         randomFreeTile :: Prelevel -> IO Pt
         randomFreeTile pre = case randomElement $ freep pre of
@@ -226,15 +205,29 @@ createLevel s = do zf <- randomRIO (0,1)
                                 return (x,y)
                                           
   
-        createWay :: Pt -> Pt -> [Pt]
-        createWay (sx, sy) (zx, zy) = if sx==zx then case signum (sy-zy) of
-                                                          -1 -> (zx, zy) : createWay (sx, sy) (zx, zy - 1)
-                                                          0 -> [(zx, zy)]
-                                                          1 -> (zx, zy) : createWay (sx, sy) (zx, zy + 1)
-                                                else case signum (sx-zx) of
-                                                          -1 -> (zx, zy) : createWay (sx, sy) (zx - 1, zy)
-                                                          1 -> (zx, zy) : createWay (sx, sy) (zx + 1, zy)
-  
+        createWay :: Prelevel -> IO Prelevel
+        createWay pre
+                    = do let path = guaranteedpathp pre 
+                         newhead <- findNeighbor pre
+                         if length path == 1
+                             then case newhead of
+                                    Nothing -> error "ALARM! ALARM!"
+                                    Just x -> createWay pre {guaranteedpathp = x:path}
+                             else case newhead of
+                                    Nothing -> return pre
+                                    Just x -> do z <- randomRIO (1,30)
+                                                 let int :: Int
+                                                     int = z {- Bäh! -}
+                                                 if z==11
+                                                    then return pre
+                                                         else createWay pre {guaranteedpathp = x:path}
+
+          where findNeighbor Prelevel {sizep=(xy,yx),guaranteedpathp=path}
+                    = do let (x,y)= head path
+                         shuffled <- shuffle $ [(x+1,y), (x-1,y), (x,y+1), (x,y-1)]\\(path++[(0,z) | z <- [1..yx]]++[(xy+1,z) | z <- [1..yx]]++[(z,0) | z <- [1..xy]]++[(z,yx+1) | z <- [1..xy]])
+                         return $ listToMaybe shuffled
+                      
+ 
         proposeElements :: Int -> [Element]
         proposeElements s = [ Wall | i <- [0 .. (s + 1)] ]
   

@@ -101,10 +101,10 @@ draw' _ [] _ _ = return ()
 
 drawPosition :: Level -> Pt -> DC a -> IO ()
 drawPosition level pt dc = do drawPick dc pt (initl level pt)
-                              if (pt `hasCondition` isHead) level
+                              if (pt `hasCondition` ((==) Head)) level
                                  then drawPick dc pt "Head"
                                  else return ()
-                              if (pt `hasCondition` ( (==) Tail)) level
+                              if (pt `hasCondition` ((==) Tail)) level
                                  then drawPick dc pt Tail
                                  else return ()
                               putStrLn $ "Koordinate "++show pt++" gezeichnet."
