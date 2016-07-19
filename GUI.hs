@@ -3,6 +3,7 @@ import Graphics.UI.WX
 import Graphics.UI.WXCore as WXCore
 import Prelude
 import Logic
+import Data.List
 import System.Random
 
 picsize :: Int
@@ -100,14 +101,16 @@ draw' _ [] _ _ = return ()
 
 
 drawPosition :: Level -> Pt -> DC a -> IO ()
-drawPosition level pt dc = do drawPick dc pt (initl level pt)
-                              if (pt `hasCondition` ((==) Head)) level
-                                 then drawPick dc pt "Head"
-                                 else return ()
-                              if (pt `hasCondition` ((==) Tail)) level
-                                 then drawPick dc pt Tail
-                                 else return ()
-                              putStrLn $ "Koordinate "++show pt++" gezeichnet."
+drawPosition level (x,y) dc = do case initl level (x,y) of 
+                                   Need i -> drawPick dc (x,y) $ Need $ i - (length $ intersect [(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] (pathl level))
+                                   p -> drawPick dc (x,y) p                               
+                                 if ((x,y) `hasCondition` ((==) Head)) level
+                                   then drawPick dc (x,y) "Head"
+                                   else return ()
+                                 if ((x,y) `hasCondition` ((==) Tail)) level
+                                   then drawPick dc (x,y) Tail
+                                   else return ()
+                                 putStrLn $ "Koordinate "++show (x,y)++" gezeichnet."
                               
 
 drawPick :: Drawable p => DC a -> Pt -> p -> IO () 
