@@ -7,7 +7,7 @@ Somekindofpuzzle ist ein Rätselspiel, bei dem man einen Weg vom Startfeld zum Z
 Anleitung:  
 Klicke auf ein Nachbarfeld, um dorthin zu gehen. Klicke auf einen Teil deines Weges, um zu diesen Zeitpunkt zurückzuspringen.  
 Wälle sind nicht begehbar, Portale erlauben einem, zu einem Portal der anderen Farbe zu springen. Steht auf einem Feld eine Zahl, so musst du genau so viele der neun Umgebungsfelder dieses Feldes auf deinem finalen Weg begangen haben.  
-Manchmal ist deine Haustür verschlossen (nicht offensichtlich); versuche, den Schlüssel in deinen Weg zu integrieren!  
+Manchmal ist deine Haustür verschlossen; versuche, den Schlüssel in deinen Weg zu integrieren!  
 
 Technische Hilfe:  
 Das Spiel wurde mit dem wx-package von Haskell umgesetzt. Zur Installation sei folgende Hilfsseite ans Herz gelegt: https://wiki.haskell.org/WxHaskell/Windows#Installing_the_easy_way durchführen. Neustarten am Ende nicht vergessen, sonst geht es nicht!  
