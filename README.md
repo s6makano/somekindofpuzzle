@@ -6,7 +6,7 @@ Somekindofpuzzle ist ein Rätselspiel, bei dem man einen Weg vom Startfeld zum Z
 
 Anleitung:  
 Klicke auf ein Nachbarfeld, um dorthin zu gehen. Klicke auf einen Teil deines Weges, um zu diesem Zeitpunkt zurückzuspringen.  
-Es gibt diverse Sonderfelder, welche die Bewegungsfreiheit modifizieren oder zusätzliche Siegbedingungen aufstellen. Deren genaue Funktionsweise herauszufinden ist Teil des schier endlosen Spielspaß’!
+Es gibt diverse Sonderfelder, welche die Bewegungsfreiheit modifizieren oder zusätzliche Siegbedingungen aufstellen. Deren genaue Funktionsweise herauszufinden ist Teil des schier endlosen Spielspaßes!
 
 Technische Hilfe:  
 Das Spiel wurde mit dem wx-package von Haskell umgesetzt. Zur Installation sei folgende Hilfsseite ans Herz gelegt: https://wiki.haskell.org/WxHaskell/Windows#Installing_the_easy_way durchführen. Neustarten am Ende nicht vergessen, sonst geht es nicht!  
