@@ -12,7 +12,6 @@ Manchmal ist deine Haustür verschlossen; versuche, den Schlüssel in deinen Weg
 Technische Hilfe:  
 Das Spiel wurde mit dem wx-package von Haskell umgesetzt. Zur Installation sei folgende Hilfsseite ans Herz gelegt: https://wiki.haskell.org/WxHaskell/Windows#Installing_the_easy_way durchführen. Neustarten am Ende nicht vergessen, sonst geht es nicht!  
 Das Spiel wird dann wie auch in der „Installationsanleitung“ beschrieben mittel cabal configure, build, install kompiliert.  
-Im Ordner somekindofpuzzle finden sich alle benötigten Dateien, picturesets beinhaltet andere Settings für die Bilder (momentan noch nicht). Obsolet kann gekonnt ignoriert werden.  
 
 Entwicklungsplan:  
 21.6. Absegnung des Projektes ✓  
