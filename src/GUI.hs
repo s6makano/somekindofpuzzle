@@ -35,10 +35,7 @@ gui =
      menuLine game 
      quit <- menuQuit game [help := "Quit the game"] 
 
-     set new   [on command := do 
-                                 newlevel <- createLevel
-                                 varSet vlevel newlevel 
-                                 set f [ layout      := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
+     set new   [on command := do hlintnervt f vlevel
                                  repaint f             
                ]
      set quit  [on command := close f] 
@@ -71,13 +68,13 @@ clicki f vlevel (Point b h) =  do {-putStrLn "Ich wurde angeklickt."-}
                                   level2 <- varGet vlevel
                                   {-putStrLn "Der neue Level ist da."
                                   putStrLn "Jetzt teste ich noch, ob die Siegbedingung erfüllt ist."-}
-                                  when (finito level2) $ do newlevel <- createLevel
-                                                            varSet vlevel newlevel
-                                                            set f [ layout := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
+                                  when (finito level2) $ hlintnervt f vlevel
                                   {-putStrLn "Siegbedingung getestet."-}
                                   repaint f
                                
-                                 
+hlintnervt f vlevel = do newlevel <- createLevel
+                         varSet vlevel newlevel
+                         set f [ layout := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]                                 
     
 draw :: Var Level -> DC a -> b -> IO ()
 draw vlevel dc _view = do level <- varGet vlevel 
