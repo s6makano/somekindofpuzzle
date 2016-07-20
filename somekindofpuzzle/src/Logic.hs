@@ -44,7 +44,7 @@ finito level = initl level (head (pathl level)) == End && all (hasNeeds level) (
 hasNeeds :: Level -> Pt -> Bool
 hasNeeds level (x,y) = case initl level (x,y) of
                          Need i -> i == length ([(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] `intersect` pathl level)
-                         Key -> (x,y) `elem` (pathl level)
+                         Key -> (x,y) `elem` pathl level
                          _ -> True
 
 
@@ -182,20 +182,20 @@ createLevel = do zf <- randomRIO (0,1)
         lbui 3 pre = do shuffled <- shuffle $ freep pre \\ guaranteedpathp pre
                         rand <- randomRIO (-2,5)
                         let (xy,yx) = sizep pre
-                            changing = take ((quot (xy*yx - length shuffled) 2) + rand) shuffled
+                            changing = take (quot (xy*yx - length shuffled) 2 + rand) shuffled
                         return pre { initp = \pt -> if pt `elem` changing then Wall else initp pre pt,
                                      freep = freep pre \\ changing
                                    }
         lbui 4 pre = do shuffled <- shuffle $ freep pre
                         rand <- randomRIO (-1,4)
                         let (xy,yx) = sizep pre
-                            changing = take ((quot (length shuffled) 5) + rand) shuffled
+                            changing = take (quot (length shuffled) 5 + rand) shuffled
                         {-putStrLn $ show $ freep pre-}
                         return pre { initp = \pt -> if pt `elem` changing then Need $ getNeeds (guaranteedpathp pre) pt else initp pre pt,
                                      freep = freep pre \\ changing
                                    }                                     
         
-        lbui 5 pre = if length (freep pre) < 2 || (not $ null $ filter (\pt -> PortalBlue == initp pre pt || PortalOrange == initp pre pt) $ tilelist $ sizep pre)
+        lbui 5 pre = if length (freep pre) < 2 || not (any (\pt -> PortalBlue == initp pre pt || PortalOrange == initp pre pt) (tilelist $ sizep pre))
                         then return pre  
                         else do shuffled <- shuffle $ freep pre
                                 rand <- randomRIO (1,3)
@@ -215,7 +215,7 @@ createLevel = do zf <- randomRIO (0,1)
                                              freep = freep pre \\ changing
                                            }  
         
-        lbui 6 pre = if (null $ freep pre) || (null $ filter (\pt -> PortalBlue == initp pre pt || PortalOrange == initp pre pt) $ tilelist $ sizep pre)
+        lbui 6 pre = if null (freep pre) || not (any (\pt -> PortalBlue == initp pre pt || PortalOrange == initp pre pt) (tilelist $ sizep pre))
                         then return pre  
                         else do shuffled <- shuffle $ freep pre
                                 rand <- randomRIO (1,7)
