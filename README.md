@@ -1,5 +1,5 @@
 # somekindofpuzzle
-by s6makano and s6jogrun
+by s6makano and x432ph
 
 Beschreibung:  
 Somekindofpuzzle ist ein Rätselspiel, bei dem man einen Weg vom Startfeld zum Zielfeld finden muss. Jedes Level wird zufällig erstellt, besitzt aber eine garantierte Lösung, Eindeutigkeit ist nicht gegeben.  
