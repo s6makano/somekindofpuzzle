@@ -16,8 +16,7 @@ picsize = 100
 gui :: IO ()
 gui = 
    do
-     vs <- varCreate 0   
-     level <- createLevel 0
+     level <- createLevel
      vlevel <- varCreate level
      
      
@@ -37,8 +36,7 @@ gui =
      quit <- menuQuit game [help := "Quit the game"] 
 
      set new   [on command := do 
-                                 newlevel <- createLevel 0
-                                 varSet vs 0
+                                 newlevel <- createLevel
                                  varSet vlevel newlevel 
                                  set f [ layout      := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
                                  repaint f             
@@ -52,7 +50,7 @@ gui =
            , layout      := space (fst (sizel level)*picsize) (snd (sizel level)*picsize) {- Variabel? -}           
            , on paint    := onpaint f vlevel 
                         
-           , on click    := clicki f vlevel vs
+           , on click    := clicki f vlevel
            ] 
      WXCore.windowSetFocus f
 
@@ -65,22 +63,20 @@ onpaintdebug :: Frame () -> Var Level -> DC a -> b -> IO ()
 onpaintdebug f vlevel dc _view = set f [on paint := onpaint f vlevel]
                                
 
-clicki :: Frame () -> Var Level -> Var Int -> Point -> IO()
-clicki f vlevel vs (Point b h) = do {-putStrLn "Ich wurde angeklickt."-}
-                                    level <- varGet vlevel
-                                    {-putStrLn "Ich beginne, einen neuen Level zu generieren."-}
-                                    varSet vlevel (input level (ceiling (fromIntegral b/fromIntegral picsize), ceiling (fromIntegral h/fromIntegral picsize)))
-                                    level2 <- varGet vlevel
-                                    {-putStrLn "Der neue Level ist da."
-                                    putStrLn "Jetzt teste ich noch, ob die Siegbedingung erfüllt ist."-}
-                                    when (finito level2) $ do s <- varGet vs
-                                                              varSet vs $ s+1
-                                                              newlevel <- createLevel $ s+1
-                                                              varSet vlevel newlevel
-                                                              set f [ layout := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
-                                    {-putStrLn "Siegbedingung getestet."-}
-                                    repaint f
-                                 
+clicki :: Frame () -> Var Level -> Point -> IO()
+clicki f vlevel (Point b h) =  do {-putStrLn "Ich wurde angeklickt."-}
+                                  level <- varGet vlevel
+                                  {-putStrLn "Ich beginne, einen neuen Level zu generieren."-}
+                                  varSet vlevel (input level (ceiling (fromIntegral b/fromIntegral picsize), ceiling (fromIntegral h/fromIntegral picsize)))
+                                  level2 <- varGet vlevel
+                                  {-putStrLn "Der neue Level ist da."
+                                  putStrLn "Jetzt teste ich noch, ob die Siegbedingung erfüllt ist."-}
+                                  when (finito level2) $ do newlevel <- createLevel
+                                                            varSet vlevel newlevel
+                                                            set f [ layout := space (fst (sizel newlevel)*picsize) (snd (sizel newlevel)*picsize)]
+                                  {-putStrLn "Siegbedingung getestet."-}
+                                  repaint f
+                               
                                  
     
 draw :: Var Level -> DC a -> b -> IO ()
