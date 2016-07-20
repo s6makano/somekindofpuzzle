@@ -2,18 +2,17 @@
 by s6makano and s6jogrun
 
 Beschreibung:  
-Es soll ein Rätselspiel werden, bei dem man das gesamte Spielfeld inklusive Start- und Endfeld sieht. Ein gültiger Weg ist eine Linie vom Start zum Ziel. Dabei ist das Spielfeld diskret, vermutlich in Form von dargestellten Plättchen. Jedes einzelne dieser soll interaktiv angeklickt werden können, wodurch es in den Weg eingebunden bzw. wieder aus diesem entfernt wird.  
-Die Schwierigkeit besteht darin, dass verschiedene Elemente Voraussetzungen an den Weg stellen. Beginnend mit einfachen Blockaden wird es später auch an Felder geben, die x Teile vom Weg in der direkten Umgebung des Feldes fordern. Bleibt Zeit über, könnten auch interaktive Elemente wie plättchenbewegende Schalter umgesetzt werden.  
-Alle Elementideen müssen natürlich auf Praktikabilität untersucht werden. Mit fortschreitendem Level gibt es mehr Elemente und damit weniger Möglichkeiten für einen gültigen Zug, wodurch der Schwierigkeitsgrad ansteigt.  
+Somekindofpuzzle ist ein Rätselspiel, bei dem man einen Weg vom Startfeld zum Zielfeld finden muss. Jedes Level wird zufällig erstellt, besitzt aber eine garantierte Lösung, Eindeutigkeit ist nicht gegeben.  
 
-Der Quellcode wird zwei Schwerpunkte haben. Da die Lösung nicht eindeutig sein muss, wird es eine Routine geben, die überprüft, ob ein abgegebener Zug eine Lösung darstellt.  
-Der Hauptfokus wird jedoch auf einer zufälligen Erstellung der Rätsel liegen, indem mit einem leeren Spielfeld, einem Weg darauf und einer Liste von einzubauenden Elementen ein Level erstellt wird. Dabei werden nach und nach Elemente aus der Liste in das Spielfeld integriert, sodass der vorliegende Weg noch immer eine Lösung darstellt (um Lösbarkeit zu garantieren), bis gemäß des Schwierigkeitsgrades genug Elemente integriert wurden.  
-Die Elemente sollen dabei ein Datentyp sein, sodass der eigentliche Algorithmus nur abstrakt mit einem Datentyp Element arbeitet. Dadurch können, wenn der Kern des Projektes steht, in der verbliebenen Zeit weitere Elemente ausgedacht und integriert werden.  
-Eine Umsetzung in reinem Haskell wird uns den Vorteil bringen, dass wir die Möglichkeiten unter anderem von lazy evaluation (für ein Terminieren in praktikabler Zeit) und Monaden nutzen können.
+Anleitung:  
+Klicke auf ein Nachbarfeld, um dorthin zu gehen. Klicke auf einen Teil deines Weges, um zu diesen Zeitpunkt zurückzuspringen.  
+Wälle sind nicht begehbar, Portale erlauben einem, zu einem Portal der anderen Farbe zu springen. Steht auf einem Feld eine Zahl, so musst du genau so viele der neun Umgebungsfelder dieses Feldes auf deinem finalen Weg begangen haben.  
+Manchmal ist deine Haustür verschlossen (nicht offensichtlich); versuche, den Schlüssel in deinen Weg zu integrieren!  
 
-Für das Interface wollen wird wx-package benutzen, wie es beispielsweise nachfolgendes Spiel benutzt:  
-https://hackage.haskell.org/package/babylon  
-Dadurch kann das Spiel komplett haskellintern umgesetzt werden und wir lernen direkt am praktischen Beispiel, wie man ein interaktives Interface umsetzt.  
+Technische Hilfe:  
+Das Spiel wurde mit dem wx-package von Haskell umgesetzt. Zur Installation sei folgende Hilfsseite ans Herz gelegt: https://wiki.haskell.org/WxHaskell/Windows#Installing_the_easy_way durchführen. Neustarten am Ende nicht vergessen, sonst geht es nicht!  
+
+Das Spiel wird dann wie auch in der „Installationsanleitung“ beschrieben mittel cabal configure, build, install kompiliert.
 
 Entwicklungsplan:  
 21.6. Absegnung des Projektes ✓  
