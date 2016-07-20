@@ -21,9 +21,10 @@ Entwicklungsplan:
       dafür bereits Umsetzung von Blockade ✓  
 13.7. Algorithmus zu Erstellung einer Spielinstanz  
       dafür weitere Elemente ✓  
-bis zu Projektabgabe: Tuning an Schwierigkeit und Erstellung weiterer Elemente  
+bis zu Projektabgabe: Tuning an Schwierigkeit und Erstellung weiterer Elemente ✓  
 
 Versionhistory:  
 0.1 – Wall  
 {- 0.2 - Wall, Timemachine -}  
 0.3 Wall, Portals, Minesweepterthingys
+0.4 Wall, Portals, Minesweepterthingys, Key
