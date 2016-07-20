@@ -10,7 +10,7 @@ Es gibt diverse Sonderfelder, welche die Bewegungsfreiheit modifizieren oder zus
 
 Technische Hilfe:  
 Das Spiel wurde mit dem wx-package von Haskell umgesetzt. Zur Installation sei folgende Hilfsseite ans Herz gelegt: https://wiki.haskell.org/WxHaskell/Windows#Installing_the_easy_way durchführen. Neustarten am Ende nicht vergessen, sonst geht es nicht!  
-Das Spiel wird dann wie auch in der „Installationsanleitung“ beschrieben mittel cabal configure, build, install kompiliert.  
+Das Spiel wird dann wie auch in der „Installationsanleitung“ beschrieben mittels cabal configure, build, install kompiliert.  
 
 Entwicklungsplan:  
 21.6. Absegnung des Projektes ✓  
