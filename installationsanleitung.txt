@@ -1,4 +1,4 @@
-﻿(0. Den Inhalt von assets/ mit einem Texture-Pack überschreiben, falls gewünscht. Unbedingt tun! Pflanzen sind viel hübscher!)
+(0. Den Inhalt von assets/ mit einem Texture-Pack überschreiben, falls gewünscht. Unbedingt tun! Pflanzen sind viel hübscher! Naja, Geschmackssache.)
 1. cabal configure
 2. cabal build
 3. cabal install
