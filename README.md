@@ -26,5 +26,5 @@ bis zu Projektabgabe: Tuning an Schwierigkeit und Erstellung weiterer Elemente â
 Versionhistory:  
 0.1 â€“ Wall  
 {- 0.2 - Wall, Timemachine -}  
-0.3 Wall, Portals, Minesweepterthingys
+0.3 Wall, Portals, Minesweepterthingys  
 0.4 Wall, Portals, Minesweepterthingys, Key
