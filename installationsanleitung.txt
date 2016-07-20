@@ -1,0 +1,6 @@
+﻿(0. Den Inhalt von assets/ mit einem Texture-Pack überschreiben, falls gewünscht.)
+1. cabal configure
+2. cabal build
+3. cabal install
+
+Um wx zu installieren: Einfach https://wiki.haskell.org/WxHaskell/Windows#Installing_the_easy_way durchführen. Neustarten am Ende nicht vergessen, sonst geht es nicht!
