@@ -101,7 +101,10 @@ draw' _ [] _ _ = return ()
 
 drawPosition :: Level -> Pt -> DC a -> IO ()
 drawPosition level (x,y) dc = do case initl level (x,y) of 
-                                   Need i -> drawPick dc (x,y) $ Need $ i - length ([(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] `intersect` pathl level)
+                                   Need i -> let diff = i - length ([(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] `intersect` pathl level) in
+                                             if diff < 0 then drawPick dc (x,y) "Need-"
+                                                else do drawPick dc (x,y) $ Need i
+                                                        drawPick dc (x,y) $ "Needs" ++ (show diff)
                                    p -> drawPick dc (x,y) p                               
                                  when (((x,y) `hasCondition` (Head ==)) level) $ drawPick dc (x,y) "Head"
                                  when (((x,y) `hasCondition` (Tail ==)) level) $ drawPick dc (x,y) Tail

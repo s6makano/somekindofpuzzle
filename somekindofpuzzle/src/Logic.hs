@@ -18,7 +18,7 @@ data Level = Level { sizel :: (Int, Int),
                      statusl :: Int -> Pt -> [State],
                      pathl :: [Pt] }
        
-data Element = Start | Need Int | PortalBlue | PortalOrange | End | Empty | Oob | Wall deriving (Eq, Show)
+data Element = Start | Need Int | PortalBlue | PortalOrange | Key | End | Empty | Oob | Wall deriving (Eq, Show)
 
 instance Drawable Element where
   drawable Oob = error "Oob cannot be drawn"
@@ -43,8 +43,9 @@ finito level = initl level (head (pathl level)) == End && all (hasNeeds level) (
 
 hasNeeds :: Level -> Pt -> Bool
 hasNeeds level (x,y) = case initl level (x,y) of
-                      Need i -> i == length ([(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] `intersect` pathl level)
-                      _ -> True
+                         Need i -> i == length ([(xx,yy) | xx <- [x-1,x,x+1], yy <- [y-1,y,y+1]] `intersect` pathl level)
+                         Key -> (x,y) `elem` (pathl level)
+                         _ -> True
 
 
 
@@ -156,8 +157,8 @@ createLevel = do zf <- randomRIO (0,1)
                  return endresult
                                       
   where lbui :: Int -> Prelevel -> IO Prelevel    
-        lbui 1 _ = do xy <- randomRIO (4,10)
-                      yx <- randomRIO (3,7)
+        lbui 1 _ = do xy <- randomRIO (5,10)
+                      yx <- randomRIO (4,8)
                       let sizep = (xy,yx)
                       startp <- randomTile sizep
                       let freep = delete startp $ tilelist sizep
@@ -188,7 +189,7 @@ createLevel = do zf <- randomRIO (0,1)
         lbui 4 pre = do shuffled <- shuffle $ freep pre
                         rand <- randomRIO (-1,4)
                         let (xy,yx) = sizep pre
-                            changing = take ((quot (length shuffled) 3) + rand) shuffled
+                            changing = take ((quot (length shuffled) 5) + rand) shuffled
                         {-putStrLn $ show $ freep pre-}
                         return pre { initp = \pt -> if pt `elem` changing then Need $ getNeeds (guaranteedpathp pre) pt else initp pre pt,
                                      freep = freep pre \\ changing
@@ -206,7 +207,7 @@ createLevel = do zf <- randomRIO (0,1)
                                 let changing = take (2*anz) shuffled
                                     orange = take anz changing
                                     blue = drop anz changing
-                                putStrLn $ show changing
+                                {- putStrLn $ show changing -}
                                 return pre { initp = \pt -> case () of
                                                                 _ | pt `elem` blue -> PortalBlue
                                                                   | pt `elem` orange -> PortalOrange
@@ -217,8 +218,8 @@ createLevel = do zf <- randomRIO (0,1)
         lbui 6 pre = if (null $ freep pre) || (null $ filter (\pt -> PortalBlue == initp pre pt || PortalOrange == initp pre pt) $ tilelist $ sizep pre)
                         then return pre  
                         else do shuffled <- shuffle $ freep pre
-                                rand <- randomRIO (1,5)
-                                putStrLn $ show rand
+                                rand <- randomRIO (1,7)
+                                {- putStrLn $ show rand -}
                                 let int :: Int
                                     int = rand
                                 if rand >=3
@@ -268,16 +269,26 @@ createLevel = do zf <- randomRIO (0,1)
                                                                               case newhead of
                                                                                 Nothing -> return pre
                                                                                 Just x -> createWay pre {guaranteedpathp = x:path}
-                                                                Just p -> do {-zp <- randomRIO (1,2)-}
+                                                                Just p -> do zp <- randomRIO (1,2)
                                                                              let intp :: Int
-                                                                                 intp = 1 {-TODO-} 
+                                                                                 intp = zp
                                                                              createWay pre {guaranteedpathp = p:path,
                                                                                             initp = \pt -> case () of
                                                                                                               _ | pt == h -> if intp == 1 then PortalBlue else PortalOrange
                                                                                                                 | pt == p -> if intp == 1 then PortalOrange else PortalBlue
                                                                                                                 | otherwise -> initp pre pt,
                                                                                             freep = freep pre \\ [p,h]}
-                                                                             
+                                      
+                                      | z > 9 && z <= 13 -> do newhead <- selectNeighbor pre
+                                                               case newhead of
+                                                                 Nothing -> return pre
+                                                                 Just x -> if hasNeighbor pre x
+                                                                             then createWay pre {guaranteedpathp = x:path,
+                                                                                                 initp = \pt -> if pt == x then Key
+                                                                                                                   else initp pre pt,
+                                                                                                 freep = freep pre \\ [x]}
+                                                                             else createWay pre {guaranteedpathp = x:path}
+                                                                                            
                                       | otherwise -> do newhead <- selectNeighbor pre
                                                         case newhead of
                                                           Nothing -> return pre
