@@ -7,6 +7,8 @@ import Data.List
 import System.Random
 import Control.Monad
 
+import Paths_somekindofpuzzle
+
 
 picsize :: Int
 picsize = 100
@@ -115,5 +117,7 @@ drawPick  dc (x,y) p = do bm <- elemToPick p
                           drawBitmap dc bm (Point ((x-1)*picsize) ((y-1)*picsize)) True []                                   
   where                                  
    elemToPick ::Drawable a => a -> IO (Bitmap ())
-   elemToPick x = return $ bitmap ("../assets/" ++ drawable x ++ ".png")
+   elemToPick x = {- return $ bitmap ("../assets/" ++ drawable x ++ ".png") -}
+                  do f <- getDataFileName ("assets/" ++ drawable x ++ ".png")
+                     return $ bitmap f
            
